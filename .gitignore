@@ -1,0 +1,4 @@
+.*.swp
+*.o
+ft_traceroute
+debug-ft_traceroute

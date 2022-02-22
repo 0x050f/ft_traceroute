@@ -1,0 +1,30 @@
+#include "ft_traceroute.h"
+
+int			getaddrinfo_error(char *prg_name, int error, char *str)
+{
+	dprintf(STDERR_FILENO, "%s: %s: ", prg_name, str);
+	if (error == EAI_AGAIN || error == EAI_FAIL)
+		dprintf(STDERR_FILENO, "Temporary failure in name resolution\n");
+	else if (error == EAI_NONAME)
+		dprintf(STDERR_FILENO, "Name or service not known\n");
+	else
+		dprintf(STDERR_FILENO, "Error\n");
+	return (2);
+}
+
+int			args_error(char *prg_name, int error, char *str, int range1, int range2)
+{
+	dprintf(STDERR_FILENO, "%s: ", prg_name);
+	if (error == ERR_INV_OPT)
+		dprintf(STDERR_FILENO, "invalid option -- '%s'\n", str);
+	else if (error == ERR_INV_ARG || error == ERR_OOR_ARG)
+	{
+		dprintf(STDERR_FILENO, "invalid argument: '%s'", str);
+		if (error == ERR_OOR_ARG)
+			dprintf(STDERR_FILENO, ": out of range: %d <= value <= %d", range1, range2);
+		dprintf(STDERR_FILENO, "\n");
+	}
+	else if (error == ERR_REQ_ARG)
+		dprintf(STDERR_FILENO, "option requires an argument -- '%s'\n", str);
+	return (2);
+}
