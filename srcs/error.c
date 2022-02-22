@@ -1,5 +1,17 @@
 #include "ft_traceroute.h"
 
+void		show_help(void)
+{
+	char *options[NB_OPTIONS][2] =
+	{
+		{"-h", "print help and exit"}
+	};
+
+	printf("Usage:\n  traceroute host\nOptions:\n");
+	for (size_t i = 0; i < NB_OPTIONS; i++)
+		printf("  %-18s %s\n", options[i][0], options[i][1]);
+}
+
 int			getaddrinfo_error(char *prg_name, int error, char *str)
 {
 	dprintf(STDERR_FILENO, "%s: %s: ", prg_name, str);

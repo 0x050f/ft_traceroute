@@ -22,6 +22,8 @@ typedef	struct	s_traceroute
 	char		*prg_name;
 	char		*hostname;
 	char		address[ADDR_SIZE];
+	uint32_t	ip_addr;
+	int			sockfd;
 	t_options	options;
 }				t_traceroute;
 

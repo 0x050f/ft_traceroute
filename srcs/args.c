@@ -73,6 +73,7 @@ int			check_args(int argc, char *argv[], t_traceroute *traceroute)
 		show_help();
 		return (0);
 	}
+	ft_bzero(&traceroute->options, sizeof(t_options));
 	for (int i = 1; i < argc; i++)
 	{
 		if (*argv[i] != '-' || (ft_strlen(argv[i]) == 1))
