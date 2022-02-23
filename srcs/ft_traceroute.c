@@ -10,12 +10,17 @@ int			init_traceroute(t_traceroute *traceroute)
 		dprintf(STDERR_FILENO, "%s: inet_pton: Error\n", traceroute->prg_name);
 		return (1);
 	}
-	traceroute->sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
+	traceroute->sockaddr.sin_addr.s_addr = traceroute->ip_addr;
+	traceroute->sockaddr.sin_family = AF_INET;
+	traceroute->sockaddr.sin_port = 0;
+	traceroute->sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_UDP);
 	if (traceroute->sockfd < 0)
 	{
 		dprintf(STDERR_FILENO, "%s: socket: Operation not permitted\n", traceroute->prg_name);
 		return (1);
 	}
+	int on = 1;
+	setsockopt(traceroute->sockfd, IPPROTO_IP, IP_HDRINCL, (const char *)&on, sizeof(on));
 	return (0);
 }
 

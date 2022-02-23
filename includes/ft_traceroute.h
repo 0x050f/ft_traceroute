@@ -36,15 +36,16 @@ typedef struct		s_options
 	int				h;
 }					t_options;
 
-typedef	struct	s_traceroute
+typedef	struct			s_traceroute
 {
-	char			*prg_name;
-	char			*hostname;
-	char			address[ADDR_SIZE];
-	uint32_t		ip_addr;
-	int				sockfd;
-	t_options		options;
-}				t_traceroute;
+	char				*prg_name;
+	char				*hostname;
+	char				address[ADDR_SIZE];
+	uint32_t			ip_addr;
+	struct sockaddr_in	sockaddr;
+	int					sockfd;
+	t_options			options;
+}						t_traceroute;
 
 # define ERR_NB_DEST		1
 # define ERR_INV_OPT		2
