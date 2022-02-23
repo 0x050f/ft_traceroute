@@ -71,6 +71,7 @@ int			check_args(int argc, char *argv[], t_traceroute *traceroute)
 	if (argc < 2)
 	{
 		show_help();
+		traceroute->options.h = 1;
 		return (0);
 	}
 	ft_bzero(&traceroute->options, sizeof(t_options));

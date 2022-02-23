@@ -52,12 +52,12 @@ typedef	struct	s_traceroute
 # define ERR_OOR_ARG		4 /* OUT OF RANGE */
 # define ERR_REQ_ARG		5
 
-void		show_help(void);
 
 /* args.c */
 int			check_args(int argc, char *argv[], t_traceroute *traceroute);
 
 /* error.c */
+void		show_help(void);
 int			getaddrinfo_error(char *prg_name, int error, char *str);
 int			args_error(char *prg_name, int error, char *str, int range1, int range2);
 
