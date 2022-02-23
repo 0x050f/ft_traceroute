@@ -8,14 +8,18 @@ int			resolve_hostname(char *addr, char *hostname)
 	int ret;
 	struct addrinfo *res;
 	struct addrinfo hints;
+	char			*buffer;
 
 	ft_bzero(&hints, sizeof(struct addrinfo));
 	hints.ai_family = AF_INET;
 	ret = getaddrinfo(hostname, NULL, &hints, &res);
 	if (!ret)
 	{
-		inet_ntop(AF_INET, &((struct sockaddr_in *)res->ai_addr)->sin_addr, addr, ADDR_SIZE);
+		buffer = inet_ntoa(((struct sockaddr_in *)res->ai_addr)->sin_addr);
 		freeaddrinfo(res);
+		if (!buffer)
+			return (1);
+		ft_strcpy(addr, buffer);
 	}
 	return (ret);
 }

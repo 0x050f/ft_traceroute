@@ -3,6 +3,7 @@
 
 # include <arpa/inet.h>
 # include <netdb.h>
+# include <stdlib.h>
 # include <stdio.h>
 # include <sys/types.h>
 # include <sys/socket.h>
@@ -42,7 +43,6 @@ typedef	struct	s_traceroute
 	char			address[ADDR_SIZE];
 	uint32_t		ip_addr;
 	int				sockfd;
-	t_udp_packet	packet;
 	t_options		options;
 }				t_traceroute;
 
@@ -64,5 +64,6 @@ int			args_error(char *prg_name, int error, char *str, int range1, int range2);
 /* utils.c */
 void		ft_bzero(void *s, size_t n);
 size_t		ft_strlen(const char *s);
+char		*ft_strcpy(char *dst, const char *src);
 
 #endif
