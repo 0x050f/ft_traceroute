@@ -1,6 +1,6 @@
 #include "ft_traceroute.h"
 
-char	*ft_strcpy(char *dst, const char *src)
+char		*ft_strcpy(char *dst, const char *src)
 {
 	int	i;
 
@@ -22,6 +22,28 @@ size_t		ft_strlen(const char *s)
 	while (*ptr)
 		++ptr;
 	return (ptr - s);
+}
+
+void		*ft_memcpy(void *dst, const void *src, size_t n)
+{
+	char	*pt_src;
+	char	*pt_dst;
+
+	pt_src = (char *)src;
+	pt_dst = (char *)dst;
+	while (n--)
+		*pt_dst++ = *pt_src++;
+	return (dst);
+}
+
+void		*ft_memset(void *b, int c, size_t len)
+{
+	unsigned char	*pt;
+
+	pt = (unsigned char *)b;
+	while (len--)
+		*pt++ = (unsigned char)c;
+	return (b);
 }
 
 void		ft_bzero(void *s, size_t n)
