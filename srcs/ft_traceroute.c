@@ -1,5 +1,11 @@
 #include "ft_traceroute.h"
 
+double		get_diff_ms(struct timeval *start, struct timeval *end)
+{
+	return ((double)((end->tv_sec - start->tv_sec) * 1000000 + end->tv_usec - start->tv_usec) / 1000);
+}
+
+
 /* RFC 1071 https://datatracker.ietf.org/doc/html/rfc1071 */
 unsigned short checksum(void *addr, size_t count)
 {
@@ -52,27 +58,36 @@ void	send_packet(t_traceroute *traceroute, int dstport, int ttl)
 	packet.udphdr.uh_sum = checksum(&udp_pseudo_hdr, sizeof(t_udp_pseudo_hdr));
 	if (sendto(traceroute->sockfd_udp, &packet, sizeof(packet), 0, (struct sockaddr *)&traceroute->sockaddr, sizeof(struct sockaddr)) < 0)
 		dprintf(STDERR_FILENO, "%s: sendto: Error\n", traceroute->prg_name);
-	else
-		printf("packet sent !\n");
+	if (gettimeofday(&traceroute->last_time, NULL))
+		dprintf(STDERR_FILENO, "%s: gettimeofday: Error\n", traceroute->prg_name);
+
 }
 
-int		recv_packet(t_traceroute *traceroute)
+int		recv_packet(t_traceroute *traceroute, int first_probe)
 {
 	t_icmp_packet		packet;
 	struct sockaddr_in	r_addr;
 	unsigned int		addr_len;
+	struct timeval		tv;
 
+	tv.tv_sec = 5;
+	tv.tv_usec = 0;
+	if (setsockopt(traceroute->sockfd_icmp, SOL_SOCKET, SO_RCVTIMEO,&tv,sizeof(tv)) < 0)
+		dprintf(STDERR_FILENO, "%s: setsockopt: Error\n", traceroute->prg_name);
 	addr_len = sizeof(struct sockaddr_in);
 	if (recvfrom(traceroute->sockfd_icmp, &packet, sizeof(packet), 0, (struct sockaddr*)&r_addr, &addr_len) <= 0)
-		dprintf(STDERR_FILENO, "%s: recvfrom: Error\n", traceroute->prg_name);
+		printf(" *");
 	else
 	{
+		if (gettimeofday(&tv, NULL))
+			dprintf(STDERR_FILENO, "%s: gettimeofday: Error\n", traceroute->prg_name);
+		if (!first_probe)
+			printf(" %s", inet_ntoa(*((struct in_addr *)&packet.iphdr.saddr)));
 		traceroute->src_addr = packet.iphdr.daddr;
-		printf(".");
+		printf(" %.3f ms", get_diff_ms(&traceroute->last_time, &tv));
 		if (packet.icmphdr.type == ICMP_DEST_UNREACH)
-		{
 			return (1);
-		}
+		return (2);
 	}
 	return (0);
 }
@@ -90,6 +105,7 @@ int			init_traceroute(t_traceroute *traceroute)
 	traceroute->sockaddr.sin_addr.s_addr = traceroute->ip_addr;
 	traceroute->sockaddr.sin_family = AF_INET;
 	traceroute->sockaddr.sin_port = 0;
+	traceroute->src_addr = 16777343; // 127.0.0.1
 	traceroute->sockfd_udp = socket(AF_INET, SOCK_RAW, IPPROTO_UDP);
 	if (traceroute->sockfd_udp < 0)
 	{
@@ -124,17 +140,19 @@ int			main(int ac, char **av)
 	int i;
 	for (i = 1; i <= MAX_TTL_VALUE && finished != NB_PROBES; i++)
 	{
+		printf("%2d ", i);
 		// use select instead ?
+		int found = 0;
 		int j = 0;
 		while (++j <= NB_PROBES)
 		{
 			send_packet(&traceroute, port++, i);
 			(port > DST_PORT_MAX) && (port = DST_PORT_MIN);
-			finished += recv_packet(&traceroute);
+			found = recv_packet(&traceroute, found);
+			if (found == 1)
+				finished += 1;
 		}
 		printf("\n");
 	}
-	if (i != MAX_TTL_VALUE)
-		printf("Done !\n");
 	return (0);
 }

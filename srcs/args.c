@@ -72,7 +72,6 @@ int			check_args(int argc, char *argv[], t_traceroute *traceroute)
 	ft_bzero(traceroute, sizeof(t_traceroute));
 	traceroute->prg_name = argv[0];
 	traceroute->hostname = NULL;
-	traceroute->options.h = 0;
 	if (argc < 2)
 	{
 		show_help();

@@ -8,6 +8,7 @@
 # include <netinet/ip_icmp.h>
 # include <stdlib.h>
 # include <stdio.h>
+# include <sys/time.h>
 # include <sys/types.h>
 # include <sys/socket.h>
 # include <unistd.h>
@@ -66,6 +67,7 @@ typedef	struct			s_traceroute
 	struct sockaddr_in	sockaddr;
 	int					sockfd_udp;
 	int					sockfd_icmp;
+	struct timeval		last_time;
 	t_options			options;
 }						t_traceroute;
 
