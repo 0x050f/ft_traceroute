@@ -5,7 +5,6 @@ double		get_diff_ms(struct timeval *start, struct timeval *end)
 	return ((double)((end->tv_sec - start->tv_sec) * 1000000 + end->tv_usec - start->tv_usec) / 1000);
 }
 
-
 /* RFC 1071 https://datatracker.ietf.org/doc/html/rfc1071 */
 unsigned short checksum(void *addr, size_t count)
 {
@@ -20,6 +19,20 @@ unsigned short checksum(void *addr, size_t count)
 	while (sum >> 16)
 		sum = (sum & 0xffff) + (sum >> 16);
 	return (~sum);
+}
+
+unsigned short udp4_checksum(t_traceroute *traceroute, t_udp_packet *packet)
+{
+	t_udp_pseudo_hdr	udp_pseudo_hdr;
+
+	ft_bzero(&udp_pseudo_hdr, sizeof(t_udp_pseudo_hdr));
+	ft_memcpy(&udp_pseudo_hdr.udphdr, &packet->udphdr, sizeof(t_udp_packet) - sizeof(struct iphdr));
+	udp_pseudo_hdr.src_addr = traceroute->src_addr;
+	udp_pseudo_hdr.dst_addr = traceroute->ip_addr;
+	udp_pseudo_hdr.zero = 0;
+	udp_pseudo_hdr.protocol = IPPROTO_UDP;
+	udp_pseudo_hdr.udp_len = packet->udphdr.uh_ulen;
+	return (checksum(&udp_pseudo_hdr, sizeof(t_udp_pseudo_hdr)));
 }
 
 void	fill_ip_header(t_traceroute *traceroute, struct iphdr *iphdr, int ttl)
@@ -40,7 +53,6 @@ void	fill_ip_header(t_traceroute *traceroute, struct iphdr *iphdr, int ttl)
 void	send_packet(t_traceroute *traceroute, int dstport, int ttl)
 {
 	t_udp_packet		packet;
-	t_udp_pseudo_hdr	udp_pseudo_hdr;
 
 	ft_bzero(&packet, sizeof(t_udp_packet));
 	fill_ip_header(traceroute, &packet.iphdr, ttl);
@@ -48,19 +60,11 @@ void	send_packet(t_traceroute *traceroute, int dstport, int ttl)
 	packet.udphdr.uh_dport = htons(dstport);
 	packet.udphdr.uh_ulen = htons(sizeof(t_udp_packet) - sizeof(struct iphdr)); // 0x2800 -> 0x0028
 	ft_memset(packet.data, 0x42, DATA_SIZE);
-	ft_bzero(&udp_pseudo_hdr, sizeof(t_udp_pseudo_hdr));
-	ft_memcpy(&udp_pseudo_hdr.udphdr, &packet.udphdr, sizeof(t_udp_packet) - sizeof(struct iphdr));
-	udp_pseudo_hdr.src_addr = traceroute->src_addr;
-	udp_pseudo_hdr.dst_addr = traceroute->ip_addr;
-	udp_pseudo_hdr.zero = 0;
-	udp_pseudo_hdr.protocol = IPPROTO_UDP;
-	udp_pseudo_hdr.udp_len = packet.udphdr.uh_ulen;
-	packet.udphdr.uh_sum = checksum(&udp_pseudo_hdr, sizeof(t_udp_pseudo_hdr));
+	packet.udphdr.uh_sum = udp4_checksum(traceroute, &packet);
 	if (sendto(traceroute->sockfd_udp, &packet, sizeof(packet), 0, (struct sockaddr *)&traceroute->sockaddr, sizeof(struct sockaddr)) < 0)
 		dprintf(STDERR_FILENO, "%s: sendto: Error\n", traceroute->prg_name);
 	if (gettimeofday(&traceroute->last_time, NULL))
 		dprintf(STDERR_FILENO, "%s: gettimeofday: Error\n", traceroute->prg_name);
-
 }
 
 int		recv_packet(t_traceroute *traceroute, int first_probe)
