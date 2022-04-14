@@ -5,6 +5,7 @@ void		show_help(void)
 	char *options[NB_OPTIONS][2] =
 	{
 		{"-h", "print help and exit"},
+		{"-f first_ttl", "Start from the first_ttl hop (instead from 1)"},
 		{"-m max_ttl", "Set the max number of hops (max TTL to be reached). Default is 30"}
 	};
 

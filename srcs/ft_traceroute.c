@@ -16,7 +16,7 @@ int			ft_traceroute(t_traceroute *traceroute)
 		return (1);
 	}
 	printf("traceroute to %s (%s) %d hops max, %ld byte packets\n", traceroute->hostname, traceroute->address, traceroute->ttl_val, sizeof(t_udp_packet));
-	for (int i = 1; i <= traceroute->ttl_val && !finished; i++)
+	for (int i = traceroute->first_ttl; i <= traceroute->ttl_val && !finished; i++)
 	{
 		/* number of hops */
 		printf("%2d ", i);
@@ -83,6 +83,8 @@ int			init_traceroute(t_traceroute *traceroute)
 	int on = 1;
 	setsockopt(traceroute->sockfd_udp, IPPROTO_IP, IP_HDRINCL, (const char *)&on, sizeof(on));
 	setsockopt(traceroute->sockfd_icmp, IPPROTO_IP, IP_HDRINCL, (const char *)&on, sizeof(on));
+	if (!traceroute->options.f)
+		traceroute->first_ttl = 1;
 	if (!traceroute->options.m)
 		traceroute->ttl_val = MAX_TTL_VALUE;
 	return (0);

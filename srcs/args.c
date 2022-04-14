@@ -28,7 +28,7 @@ int			handle_options(int argc, char *argv[], int *i, t_traceroute *traceroute)
 {
 	int		j;
 	int		k;
-	char	options[NB_OPTIONS] = {'h', 'm'};
+	char	options[NB_OPTIONS] = {'h', 'f', 'm'};
 
 	(void)argc;
 	k = 0;
@@ -66,11 +66,32 @@ int			handle_options(int argc, char *argv[], int *i, t_traceroute *traceroute)
 					str = argv[*i];
 				}
 				traceroute->ttl_val = ft_atoi(str);
-				if (traceroute->ttl_val < 0 || traceroute->ttl_val > 255)
-					return (args_error(traceroute->prg_name, ERR_OOR_ARG, str, 0, 255));
+				if (traceroute->ttl_val <= 0 || traceroute->ttl_val > 255)
+					return (args_error(traceroute->prg_name, ERR_OOR_ARG, str, 1, 255));
 				if (!is_num(str))
 					return (args_error(traceroute->prg_name, ERR_INV_ARG, str, 0, 0));
 				traceroute->options.m = 1;
+				return (0);
+			}
+			else if (options[k] == 'f')
+			{
+				char *str;
+
+				if (ft_strlen(&argv[*i][j + 1]))
+					str = &argv[*i][j + 1];
+				else if (argc  - 1 < *i + 1)
+					return (args_error(traceroute->prg_name, ERR_REQ_ARG, "m", 0, 0));
+				else
+				{
+					*i += 1;
+					str = argv[*i];
+				}
+				traceroute->first_ttl = ft_atoi(str);
+				if (traceroute->first_ttl <= 0 || traceroute->first_ttl > 255)
+					return (args_error(traceroute->prg_name, ERR_OOR_ARG, str, 1, 255));
+				if (!is_num(str))
+					return (args_error(traceroute->prg_name, ERR_INV_ARG, str, 0, 0));
+				traceroute->options.f = 1;
 				return (0);
 			}
 		}

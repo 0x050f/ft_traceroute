@@ -42,11 +42,12 @@ typedef struct		s_udp_packet
 	char			data[DATA_SIZE];
 }					t_udp_packet;
 
-# define NB_OPTIONS			2
+# define NB_OPTIONS			3
 
 typedef struct		s_options
 {
 	int				h;
+	int				f;
 	int				m;
 }					t_options;
 
@@ -62,6 +63,7 @@ typedef	struct			s_traceroute
 	struct sockaddr_in	sockaddr;
 	int					sockfd_udp;
 	int					sockfd_icmp;
+	int					first_ttl;
 	int					ttl_val;
 	t_options			options;
 }						t_traceroute;
