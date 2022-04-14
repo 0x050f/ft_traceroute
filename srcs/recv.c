@@ -8,9 +8,9 @@ t_icmp_packet	*recv_packet(t_traceroute *traceroute, struct timeval start_recv, 
 	struct timeval		tv;
 
 	packet = malloc(sizeof(t_icmp_packet));
-	ft_memset(packet, 0, sizeof(t_icmp_packet));
 	if (!packet)
 		return (NULL);
+	ft_memset(packet, 0, sizeof(t_icmp_packet));
 	tv.tv_sec = TIME_TO_WAIT;
 	tv.tv_usec = 0;
 	if (setsockopt(traceroute->sockfd_icmp, SOL_SOCKET, SO_RCVTIMEO,&tv,sizeof(tv)) < 0)

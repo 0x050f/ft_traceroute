@@ -4,7 +4,8 @@ void		show_help(void)
 {
 	char *options[NB_OPTIONS][2] =
 	{
-		{"-h", "print help and exit"}
+		{"-h", "print help and exit"},
+		{"-m max_ttl", "Set the max number of hops (max TTL to be reached). Default is 30"}
 	};
 
 	printf("Usage:\n  traceroute host\nOptions:\n");

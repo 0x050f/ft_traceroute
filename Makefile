@@ -17,6 +17,7 @@ DIR_OBJS		=	./compiled_srcs/
 SRCS			=	ft_traceroute.c \
 					send.c \
 					recv.c \
+					print.c \
 					time.c \
 					args.c \
 					error.c \

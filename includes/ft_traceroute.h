@@ -42,9 +42,12 @@ typedef struct		s_udp_packet
 	char			data[DATA_SIZE];
 }					t_udp_packet;
 
+# define NB_OPTIONS			2
+
 typedef struct		s_options
 {
 	int				h;
+	int				m;
 }					t_options;
 
 # define ADDR_SIZE		64
@@ -59,10 +62,9 @@ typedef	struct			s_traceroute
 	struct sockaddr_in	sockaddr;
 	int					sockfd_udp;
 	int					sockfd_icmp;
+	int					ttl_val;
 	t_options			options;
 }						t_traceroute;
-
-# define NB_OPTIONS			1
 
 # define ERR_NB_DEST		1
 # define ERR_INV_OPT		2
@@ -83,6 +85,9 @@ t_udp_packet	*send_packet(t_traceroute *traceroute, int dstport, int ttl);
 /* recv.c */
 t_icmp_packet	*recv_packet(t_traceroute *traceroute, struct timeval start_recv, t_udp_packet **udp_packets, int nb_probes);
 
+/* print.c */
+int		print_packets(t_udp_packet **udp_packets, t_icmp_packet **icmp_packets);
+
 /* time.c */
 double			get_diff_ms(struct timeval *start, struct timeval *end);
 struct timeval	get_diff_timeval(float start, float end);
@@ -94,6 +99,8 @@ int			check_args(int argc, char *argv[], t_traceroute *traceroute);
 void		show_help(void);
 int			getaddrinfo_error(char *prg_name, int error, char *str);
 int			args_error(char *prg_name, int error, char *str, int range1, int range2);
+int			is_num(const char *str);
+int			ft_atoi(const char *str);
 
 /* utils.c */
 size_t		ft_strlen(const char *s);

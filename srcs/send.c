@@ -51,9 +51,9 @@ t_udp_packet	*send_packet(t_traceroute *traceroute, int dstport, int ttl)
 	t_udp_packet		*packet;
 
 	packet = malloc(sizeof(t_udp_packet));
-	ft_memset(packet, 0, sizeof(t_udp_packet));
 	if (!packet)
 		return (NULL);
+	ft_memset(packet, 0, sizeof(t_udp_packet));
 	fill_ip_header(traceroute, &packet->iphdr, ttl);
 	// packet->udphdr.uh_sport = not needed ?
 	packet->udphdr.uh_dport = htons(dstport);

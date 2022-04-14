@@ -28,7 +28,7 @@ int			handle_options(int argc, char *argv[], int *i, t_traceroute *traceroute)
 {
 	int		j;
 	int		k;
-	char	options[NB_OPTIONS] = {'h'};
+	char	options[NB_OPTIONS] = {'h', 'm'};
 
 	(void)argc;
 	k = 0;
@@ -50,6 +50,27 @@ int			handle_options(int argc, char *argv[], int *i, t_traceroute *traceroute)
 			{
 				show_help();
 				traceroute->options.h = 1;
+				return (0);
+			}
+			else if (options[k] == 'm')
+			{
+				char *str;
+
+				if (ft_strlen(&argv[*i][j + 1]))
+					str = &argv[*i][j + 1];
+				else if (argc  - 1 < *i + 1)
+					return (args_error(traceroute->prg_name, ERR_REQ_ARG, "m", 0, 0));
+				else
+				{
+					*i += 1;
+					str = argv[*i];
+				}
+				traceroute->ttl_val = ft_atoi(str);
+				if (traceroute->ttl_val < 0 || traceroute->ttl_val > 255)
+					return (args_error(traceroute->prg_name, ERR_OOR_ARG, str, 0, 255));
+				if (!is_num(str))
+					return (args_error(traceroute->prg_name, ERR_INV_ARG, str, 0, 0));
+				traceroute->options.m = 1;
 				return (0);
 			}
 		}
