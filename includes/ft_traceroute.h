@@ -13,15 +13,6 @@
 # include <sys/socket.h>
 # include <unistd.h>
 
-/* ==>  udp.h
-struct udphdr {
-	u_short	uh_sport;		source port
-	u_short	uh_dport;		destination port
-	short	uh_ulen;		udp length
-	u_short	uh_sum;			udp checksum
-};
-*/
-
 # define DATA_SIZE		32
 
 typedef struct		s_icmp_packet
@@ -85,6 +76,16 @@ typedef	struct			s_traceroute
 
 # define DST_PORT_MIN		33435
 # define DST_PORT_MAX		33535
+
+/* send.c */
+t_udp_packet	*send_packet(t_traceroute *traceroute, int dstport, int ttl);
+
+/* recv.c */
+t_icmp_packet	*recv_packet(t_traceroute *traceroute, struct timeval start_recv, t_udp_packet **udp_packets, int nb_probes);
+
+/* time.c */
+double			get_diff_ms(struct timeval *start, struct timeval *end);
+struct timeval	get_diff_timeval(float start, float end);
 
 /* args.c */
 int			check_args(int argc, char *argv[], t_traceroute *traceroute);
