@@ -10,7 +10,7 @@ int			resolve_hostname(char *addr, char *hostname)
 	struct addrinfo hints;
 	char			*buffer;
 
-	ft_bzero(&hints, sizeof(struct addrinfo));
+	ft_memset(&hints, 0, sizeof(struct addrinfo));
 	hints.ai_family = AF_INET;
 	ret = getaddrinfo(hostname, NULL, &hints, &res);
 	if (!ret)
@@ -69,7 +69,7 @@ int			check_args(int argc, char *argv[], t_traceroute *traceroute)
 {
 	int		ret;
 
-	ft_bzero(traceroute, sizeof(t_traceroute));
+	ft_memset(traceroute, 0, sizeof(t_traceroute));
 	traceroute->prg_name = argv[0];
 	traceroute->hostname = NULL;
 	if (argc < 2)
@@ -78,7 +78,7 @@ int			check_args(int argc, char *argv[], t_traceroute *traceroute)
 		traceroute->options.h = 1;
 		return (0);
 	}
-	ft_bzero(&traceroute->options, sizeof(t_options));
+	ft_memset(&traceroute->options, 0, sizeof(t_options));
 	for (int i = 1; i < argc; i++)
 	{
 		if (*argv[i] != '-' || (ft_strlen(argv[i]) == 1))

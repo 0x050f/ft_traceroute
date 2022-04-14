@@ -55,28 +55,3 @@ void		*ft_memset(void *b, int c, size_t len)
 		*pt++ = (unsigned char)c;
 	return (b);
 }
-
-int		ft_memcmp(const void *s1, const void *s2, size_t n)
-{
-	unsigned char *pt_s1;
-	unsigned char *pt_s2;
-
-	pt_s1 = (unsigned char *)s1;
-	pt_s2 = (unsigned char *)s2;
-	while (n--)
-		if (*pt_s1++ != *pt_s2++)
-			return ((pt_s1 - 1) - (pt_s2 - 1));
-	return (0);
-}
-
-void		ft_bzero(void *s, size_t n)
-{
-	char	*tmp;
-
-	while (n--)
-	{
-		tmp = (char *)s;
-		*tmp = 0;
-		s++;
-	}
-}

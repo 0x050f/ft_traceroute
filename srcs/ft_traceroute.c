@@ -5,7 +5,7 @@ double		get_diff_ms(struct timeval *start, struct timeval *end)
 	return ((double)((end->tv_sec - start->tv_sec) * 1000000 + end->tv_usec - start->tv_usec) / 1000);
 }
 
-long	ft_floor(double f)
+long	ft_floor(float f)
 {
 	if(f >= 0.0) {
 		return ((int)f);
@@ -43,7 +43,7 @@ unsigned short udp4_checksum(t_traceroute *traceroute, t_udp_packet *packet)
 {
 	t_udp_pseudo_hdr	udp_pseudo_hdr;
 
-	ft_bzero(&udp_pseudo_hdr, sizeof(t_udp_pseudo_hdr));
+	ft_memset(&udp_pseudo_hdr, 0, sizeof(t_udp_pseudo_hdr));
 	ft_memcpy(&udp_pseudo_hdr.udphdr, &packet->udphdr, sizeof(t_udp_packet) - sizeof(struct iphdr));
 	udp_pseudo_hdr.src_addr = traceroute->src_addr;
 	udp_pseudo_hdr.dst_addr = traceroute->ip_addr;
@@ -77,7 +77,6 @@ t_udp_packet	*send_packet(t_traceroute *traceroute, int dstport, int ttl)
 	ft_memset(packet, 0, sizeof(t_udp_packet));
 	if (!packet)
 		return (NULL);
-	ft_bzero(packet, sizeof(t_udp_packet));
 	fill_ip_header(traceroute, &packet->iphdr, ttl);
 	// packet->udphdr.uh_sport = not needed ?
 	packet->udphdr.uh_dport = htons(dstport);
@@ -210,7 +209,9 @@ int			main(int ac, char **av)
 			if (get_diff_ms(&start_recv, &time_recv) >= TIME_TO_WAIT * 1000.0)
 				break ;
 		}
-		char	*host_ip = NULL;
+		char	host_ip[ADDR_SIZE];
+
+		ft_memset(host_ip, 0, ADDR_SIZE);
 		for (j = 0; j < NB_PROBES; j++)
 		{
 			t_icmp_packet	*found = NULL;
@@ -224,9 +225,12 @@ udp_packets[j]->udphdr.uh_dport == ((t_udp_packet *)icmp_packets[k]->data)->udph
 				printf(" *");
 			else
 			{
-				if (!host_ip || ft_strcmp(host_ip, inet_ntoa(*((struct in_addr *)&found->iphdr.saddr))))
+				char	actual_ip[ADDR_SIZE];
+
+				ft_strcpy(actual_ip, inet_ntoa(*((struct in_addr *)&found->iphdr.saddr)));
+				if (ft_strcmp(host_ip, actual_ip))
 				{
-					host_ip = inet_ntoa(*((struct in_addr *)&found->iphdr.saddr));
+					ft_strcpy(host_ip, actual_ip);
 					printf(" %s", host_ip);
 				}
 				printf(" %.3f ms", get_diff_ms((struct timeval *)&udp_packets[j]->data, &found->time));
