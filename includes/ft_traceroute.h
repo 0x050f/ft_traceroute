@@ -29,6 +29,7 @@ typedef struct		s_icmp_packet
 	struct iphdr	iphdr;
 	struct icmphdr	icmphdr;
 	char			data[DATA_SIZE];
+	struct timeval	time;
 }					t_icmp_packet;
 
 /* https://en.wikipedia.org/wiki/User_Datagram_Protocol */
@@ -67,7 +68,6 @@ typedef	struct			s_traceroute
 	struct sockaddr_in	sockaddr;
 	int					sockfd_udp;
 	int					sockfd_icmp;
-	struct timeval		last_time;
 	t_options			options;
 }						t_traceroute;
 
@@ -81,6 +81,7 @@ typedef	struct			s_traceroute
 
 # define MAX_TTL_VALUE		30
 # define NB_PROBES			3
+# define TIME_TO_WAIT		5
 
 # define DST_PORT_MIN		33435
 # define DST_PORT_MAX		33535
@@ -96,8 +97,10 @@ int			args_error(char *prg_name, int error, char *str, int range1, int range2);
 /* utils.c */
 size_t		ft_strlen(const char *s);
 char		*ft_strcpy(char *dst, const char *src);
+int			ft_strcmp(const char *s1, const char *s2);
 void		*ft_memcpy(void *dst, const void *src, size_t n);
 void		*ft_memset(void *b, int c, size_t len);
+int			ft_memcmp(const void *s1, const void *s2, size_t n);
 void		ft_bzero(void *s, size_t n);
 
 #endif

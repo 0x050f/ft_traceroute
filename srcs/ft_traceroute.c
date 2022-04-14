@@ -5,6 +5,24 @@ double		get_diff_ms(struct timeval *start, struct timeval *end)
 	return ((double)((end->tv_sec - start->tv_sec) * 1000000 + end->tv_usec - start->tv_usec) / 1000);
 }
 
+long	ft_floor(double f)
+{
+	if(f >= 0.0) {
+		return ((int)f);
+	} else {
+		return ((int)f - 1);
+	}
+}
+
+struct timeval	get_diff_timeval(float start, float end)
+{
+	struct timeval time;
+
+	time.tv_sec = ft_floor(start - end);
+	time.tv_usec = ((float)time.tv_sec - (start - end) * 1000000);
+	return (time);
+}
+
 /* RFC 1071 https://datatracker.ietf.org/doc/html/rfc1071 */
 unsigned short checksum(void *addr, size_t count)
 {
@@ -50,50 +68,71 @@ void	fill_ip_header(t_traceroute *traceroute, struct iphdr *iphdr, int ttl)
 	iphdr->daddr = traceroute->ip_addr;
 }
 
-void	send_packet(t_traceroute *traceroute, int dstport, int ttl)
+t_udp_packet	*send_packet(t_traceroute *traceroute, int dstport, int ttl)
 {
-	t_udp_packet		packet;
+	struct timeval		time;
+	t_udp_packet		*packet;
 
-	ft_bzero(&packet, sizeof(t_udp_packet));
-	fill_ip_header(traceroute, &packet.iphdr, ttl);
-	// packet.udphdr.uh_sport = not needed ?
-	packet.udphdr.uh_dport = htons(dstport);
-	packet.udphdr.uh_ulen = htons(sizeof(t_udp_packet) - sizeof(struct iphdr)); // 0x2800 -> 0x0028
-	ft_memset(packet.data, 0x42, DATA_SIZE);
-	packet.udphdr.uh_sum = udp4_checksum(traceroute, &packet);
-	if (sendto(traceroute->sockfd_udp, &packet, sizeof(packet), 0, (struct sockaddr *)&traceroute->sockaddr, sizeof(struct sockaddr)) < 0)
-		dprintf(STDERR_FILENO, "%s: sendto: Error\n", traceroute->prg_name);
-	if (gettimeofday(&traceroute->last_time, NULL))
+	packet = malloc(sizeof(t_udp_packet));
+	ft_memset(packet, 0, sizeof(t_udp_packet));
+	if (!packet)
+		return (NULL);
+	ft_bzero(packet, sizeof(t_udp_packet));
+	fill_ip_header(traceroute, &packet->iphdr, ttl);
+	// packet->udphdr.uh_sport = not needed ?
+	packet->udphdr.uh_dport = htons(dstport);
+	packet->udphdr.uh_ulen = htons(sizeof(t_udp_packet) - sizeof(struct iphdr)); // 0x2800 -> 0x0028
+	if (gettimeofday(&time, NULL))
 		dprintf(STDERR_FILENO, "%s: gettimeofday: Error\n", traceroute->prg_name);
+	ft_memcpy(packet->data, &time, sizeof(struct timeval));
+	ft_memset(packet->data + sizeof(struct timeval), 0x42, DATA_SIZE - sizeof(struct timeval));
+	packet->udphdr.uh_sum = udp4_checksum(traceroute, packet);
+	if (sendto(traceroute->sockfd_udp, packet, sizeof(t_udp_packet), 0, (struct sockaddr *)&traceroute->sockaddr, sizeof(struct sockaddr)) < 0)
+		dprintf(STDERR_FILENO, "%s: sendto: Error\n", traceroute->prg_name);
+	return (packet);
 }
 
-int		recv_packet(t_traceroute *traceroute, int first_probe)
+t_icmp_packet	*recv_packet(t_traceroute *traceroute, struct timeval start_recv, t_udp_packet **udp_packets, int nb_probes)
 {
-	t_icmp_packet		packet;
+	t_icmp_packet		*packet;
 	struct sockaddr_in	r_addr;
 	unsigned int		addr_len;
 	struct timeval		tv;
 
-	tv.tv_sec = 5;
+	packet = malloc(sizeof(t_icmp_packet));
+	ft_memset(packet, 0, sizeof(t_icmp_packet));
+	if (!packet)
+		return (NULL);
+	tv.tv_sec = TIME_TO_WAIT;
 	tv.tv_usec = 0;
 	if (setsockopt(traceroute->sockfd_icmp, SOL_SOCKET, SO_RCVTIMEO,&tv,sizeof(tv)) < 0)
 		dprintf(STDERR_FILENO, "%s: setsockopt: Error\n", traceroute->prg_name);
 	addr_len = sizeof(struct sockaddr_in);
-	if (recvfrom(traceroute->sockfd_icmp, &packet, sizeof(packet), 0, (struct sockaddr*)&r_addr, &addr_len) <= 0)
-		printf(" *");
-	else
+	int found = 0;
+	while (!found)
 	{
-		if (gettimeofday(&tv, NULL))
+		if (recvfrom(traceroute->sockfd_icmp, packet, sizeof(t_icmp_packet) - sizeof(struct timeval), 0, (struct sockaddr*)&r_addr, &addr_len) <= 0)
+		{
+			free(packet);
+			return (NULL);
+		}
+		int i = 0;
+		for (i = 0; i < nb_probes; i++)
+		{
+			if (((t_udp_packet *)packet->data)->udphdr.check == udp_packets[i]->udphdr.check)
+				break ;
+		}
+		struct timeval		packet_time;
+		/* gettimeofday + copy time into packet received */
+		if (gettimeofday(&packet_time, NULL))
 			dprintf(STDERR_FILENO, "%s: gettimeofday: Error\n", traceroute->prg_name);
-		if (!first_probe)
-			printf(" %s", inet_ntoa(*((struct in_addr *)&packet.iphdr.saddr)));
-		traceroute->src_addr = packet.iphdr.daddr;
-		printf(" %.3f ms", get_diff_ms(&traceroute->last_time, &tv));
-		if (packet.icmphdr.type == ICMP_DEST_UNREACH)
-			return (1);
-		return (2);
+		packet->time = packet_time;
+		if (i != nb_probes || get_diff_ms(&start_recv, &packet_time) >= TIME_TO_WAIT * 1000.0)
+			found = 1;
+		else
+			tv = get_diff_timeval(TIME_TO_WAIT * 1000.0, get_diff_ms(&start_recv, &packet_time));
 	}
-	return (0);
+	return (packet);
 }
 
 int			init_traceroute(t_traceroute *traceroute)
@@ -140,23 +179,69 @@ int			main(int ac, char **av)
 	if (init_traceroute(&traceroute))
 		return (1);
 	int port = DST_PORT_MIN;
-	int finished = 0;
 	int i;
-	for (i = 1; i <= MAX_TTL_VALUE && finished != NB_PROBES; i++)
+	int j;
+	int finished = 0;
+	for (i = 1; i <= MAX_TTL_VALUE && !finished; i++)
 	{
+		t_udp_packet		**udp_packets;
+		t_icmp_packet		**icmp_packets;
+
+		udp_packets = malloc(sizeof(t_udp_packet *) * NB_PROBES);
+		icmp_packets = malloc(sizeof(t_icmp_packet *) * NB_PROBES);
+		ft_memset(udp_packets, 0, sizeof(t_udp_packet *) * NB_PROBES);
+		ft_memset(icmp_packets, 0, sizeof(t_udp_packet *) * NB_PROBES);
 		printf("%2d ", i);
-		// use select instead ?
-		int found = 0;
-		int j = 0;
-		while (++j <= NB_PROBES)
+		for (j = 0; j < NB_PROBES; j++)
 		{
-			send_packet(&traceroute, port++, i);
+			udp_packets[j] = send_packet(&traceroute, port++, i);
 			(port > DST_PORT_MAX) && (port = DST_PORT_MIN);
-			found = recv_packet(&traceroute, found);
-			if (found == 1)
-				finished += 1;
+		}
+		struct timeval start_recv;
+		struct timeval time_recv;
+
+		if (gettimeofday(&start_recv, NULL))
+			dprintf(STDERR_FILENO, "%s: gettimeofday: Error\n", traceroute.prg_name);
+		for (j = 0; j < NB_PROBES; j++)
+		{
+			icmp_packets[j] = recv_packet(&traceroute, start_recv, udp_packets, NB_PROBES);
+			if (gettimeofday(&time_recv, NULL))
+				dprintf(STDERR_FILENO, "%s: gettimeofday: Error\n", traceroute.prg_name);
+			if (get_diff_ms(&start_recv, &time_recv) >= TIME_TO_WAIT * 1000.0)
+				break ;
+		}
+		char	*host_ip = NULL;
+		for (j = 0; j < NB_PROBES; j++)
+		{
+			t_icmp_packet	*found = NULL;
+			for (int k = 0; k < NB_PROBES; k++)
+			{
+				if (udp_packets[j] && icmp_packets[k] &&
+udp_packets[j]->udphdr.uh_dport == ((t_udp_packet *)icmp_packets[k]->data)->udphdr.uh_dport)
+					found = icmp_packets[k];
+			}
+			if (!found || get_diff_ms((struct timeval *)&udp_packets[j]->data, &found->time) > TIME_TO_WAIT * 1000.0)
+				printf(" *");
+			else
+			{
+				if (!host_ip || ft_strcmp(host_ip, inet_ntoa(*((struct in_addr *)&found->iphdr.saddr))))
+				{
+					host_ip = inet_ntoa(*((struct in_addr *)&found->iphdr.saddr));
+					printf(" %s", host_ip);
+				}
+				printf(" %.3f ms", get_diff_ms((struct timeval *)&udp_packets[j]->data, &found->time));
+			if (found->icmphdr.type == ICMP_DEST_UNREACH)
+					finished = 1;
+			}
 		}
 		printf("\n");
+		for (j = 0; j < NB_PROBES; j++)
+		{
+			free(icmp_packets[j]);
+			free(udp_packets[j]);
+		}
+		free(icmp_packets);
+		free(udp_packets);
 	}
 	return (0);
 }
