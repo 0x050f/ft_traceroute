@@ -18,6 +18,8 @@ int			ft_traceroute(t_traceroute *traceroute)
 	printf("traceroute to %s (%s) %d hops max, %ld byte packets\n", traceroute->hostname, traceroute->address, traceroute->ttl_val, sizeof(t_udp_packet));
 	for (int i = traceroute->first_ttl; i <= traceroute->ttl_val && !finished; i++)
 	{
+		ft_memset(udp_packets, 0, sizeof(t_udp_packet *) * NB_PROBES);
+		ft_memset(icmp_packets, 0, sizeof(t_icmp_packet *) * NB_PROBES);
 		/* number of hops */
 		printf("%2d ", i);
 		/* attempt send */
