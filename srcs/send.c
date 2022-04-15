@@ -55,7 +55,7 @@ t_udp_packet	*send_packet(t_traceroute *traceroute, int dstport, int ttl)
 		return (NULL);
 	ft_memset(packet, 0, sizeof(t_udp_packet));
 	fill_ip_header(traceroute, &packet->iphdr, ttl);
-	// packet->udphdr.uh_sport = not needed ?
+	packet->udphdr.uh_sport = htons(ft_rand());
 	packet->udphdr.uh_dport = htons(dstport);
 	packet->udphdr.uh_ulen = htons(sizeof(t_udp_packet) - sizeof(struct iphdr)); // 0x2800 -> 0x0028
 	if (gettimeofday(&time, NULL))

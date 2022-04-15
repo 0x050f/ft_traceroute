@@ -105,6 +105,8 @@ int			is_num(const char *str);
 int			ft_atoi(const char *str);
 
 /* utils.c */
+void		ft_srand(unsigned int seed);
+int			ft_rand(void);
 size_t		ft_strlen(const char *s);
 char		*ft_strcpy(char *dst, const char *src);
 int			ft_strcmp(const char *s1, const char *s2);

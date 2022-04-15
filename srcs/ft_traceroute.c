@@ -2,7 +2,7 @@
 
 int			ft_traceroute(t_traceroute *traceroute)
 {
-	int port = DST_PORT_MIN;
+	int port = DST_PORT_MIN + 1;
 	int finished = 0;
 	t_udp_packet		**udp_packets = NULL;
 	t_icmp_packet		**icmp_packets = NULL;
@@ -85,6 +85,15 @@ int			init_traceroute(t_traceroute *traceroute)
 	int on = 1;
 	setsockopt(traceroute->sockfd_udp, IPPROTO_IP, IP_HDRINCL, (const char *)&on, sizeof(on));
 	setsockopt(traceroute->sockfd_icmp, IPPROTO_IP, IP_HDRINCL, (const char *)&on, sizeof(on));
+	struct timeval time;
+	/* random for src port */
+	if (gettimeofday(&time, NULL))
+		dprintf(STDERR_FILENO, "%s: gettimeofday: Error\n", traceroute->prg_name);
+	ft_srand(time.tv_usec);	
+	/* test packet to get src_addr */
+	t_udp_packet *packet = send_packet(traceroute, DST_PORT_MIN, 0);
+	free(recv_packet(traceroute, time, &packet, 1));
+	free(packet);
 	if (!traceroute->options.f)
 		traceroute->first_ttl = 1;
 	if (!traceroute->options.m)
