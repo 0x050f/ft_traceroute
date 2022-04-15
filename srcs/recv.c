@@ -28,7 +28,10 @@ t_icmp_packet	*recv_packet(t_traceroute *traceroute, struct timeval start_recv, 
 		for (i = 0; i < nb_probes; i++)
 		{
 			if (((t_udp_packet *)packet->data)->udphdr.check == udp_packets[i]->udphdr.check)
+			{
+				traceroute->src_addr = packet->iphdr.daddr;
 				break ;
+			}
 		}
 		struct timeval		packet_time;
 		/* gettimeofday + copy time into packet received */
