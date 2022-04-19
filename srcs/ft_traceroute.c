@@ -98,6 +98,11 @@ int			init_traceroute(t_traceroute *traceroute)
 		traceroute->first_ttl = 1;
 	if (!traceroute->options.m)
 		traceroute->ttl_val = MAX_TTL_VALUE;
+	if (traceroute->options.m && traceroute->options.f && traceroute->ttl_val < traceroute->first_ttl)
+	{
+		dprintf(STDERR_FILENO, "%s: first hop out of range\n", traceroute->prg_name);
+		return (1);
+	}
 	return (0);
 }
 
